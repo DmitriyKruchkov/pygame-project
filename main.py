@@ -74,10 +74,15 @@ def start_screen():
         intro_rect.x = 10
         text_coord += intro_rect.height
         screen.blit(string_rendered, intro_rect)
+    pygame.mixer.init()
+    pygame.mixer.music.load("intro.mp3")
+    pygame.mixer.music.set_volume(0.01)
+    pygame.mixer.music.play(-1)
 
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                pygame.mixer.stop()
                 terminate()
             elif event.type == pygame.KEYDOWN:
                 if event.key in range(48, 52):
@@ -411,6 +416,7 @@ slide_2 = Slider()
 slide_1.set_y(50)
 slide_2.set_y(HEIGHT - 50)
 
+
 set_walls()
 endline = EndLine(0)
 endline.set_score_coords(WIDTH - 30, RIGHT_WALL_X)
@@ -424,6 +430,8 @@ if multiplayer == 2:
 elif multiplayer == 3:
     slide_1.set_bot()
     slide_2.set_bot()
+
+
 
 while running:
     screen.fill(pygame.Color("black"))
@@ -502,4 +510,5 @@ while running:
     clock.tick(FPS)
     pygame.display.flip()
 
+pygame.mixer.music.stop()
 pygame.quit()
