@@ -5,6 +5,7 @@ import random
 import arrow
 from PyQt5.QtWidgets import QApplication, QPushButton, QMainWindow, QSpinBox, QLabel
 from settings import Ui_SettingsWindow
+from levelsettings import Ui_LevelSettings
 
 WIDTH = 500
 HEIGHT = 500
@@ -12,9 +13,6 @@ FPS = 60
 LEFT_WALL_x = 50
 RIGHT_WALL_X = WIDTH - 50
 SLIDER_SPEED = 12
-
-
-
 
 dragons_sprites = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
@@ -76,7 +74,7 @@ def start_screen():
         screen.blit(string_rendered, intro_rect)
     pygame.mixer.init()
     pygame.mixer.music.load("intro.mp3")
-    pygame.mixer.music.set_volume(0.01)
+    pygame.mixer.music.set_volume(0.00)
     pygame.mixer.music.play(-1)
 
     while True:
@@ -172,6 +170,59 @@ class SettingsMenu(QMainWindow, Ui_SettingsWindow):
             self.max_speed_value.setValue(minimum_speed + 2)
 
 
+class LevelButton(pygame.sprite.Sprite):
+
+    def __init__(self):
+        super().__init__(settings_sprites)
+        self.image = load_image('levelbutton.png', -1)
+        self.image = pygame.transform.scale(self.image, (50, 50))
+        self.rect = self.image.get_rect()
+        self.rect.x = WIDTH - 50
+        self.rect.y = HEIGHT - 150
+
+    def set_coords(self, x, y):
+        self.rect.x = x
+        self.rect.y = y
+
+    def get_coords(self):
+        return self.rect.x, self.rect.y, 50 + self.rect.x, \
+               50 + self.rect.y
+
+    def start_level(self):
+        app = QApplication(sys.argv)
+        ex = LevelsMenu()
+        ex.show()
+        app.exec()
+
+    def check_click(self, pos):
+        mouse_x = pos[0]
+        mouse_y = pos[1]
+        coords = self.get_coords()
+        if mouse_x > coords[0] and mouse_x < coords[2] and mouse_y > coords[1] and \
+                mouse_y < coords[3]:
+            self.start_level()
+
+
+class LevelsMenu(QMainWindow, Ui_LevelSettings):
+
+    def __init__(self):
+        super().__init__()
+        self.setupUi(self)
+        self.init_Ui()
+
+    def init_Ui(self):
+        self.setWindowTitle('Выберите режим игры')
+        self.pushButton.clicked.connect(self.apply_settings)
+        self.pushButton_4.clicked.connect(self.apply_settings)
+        self.pushButton_2.clicked.connect(self.apply_settings)
+        self.pushButton_3.clicked.connect(self.apply_settings)
+
+    def apply_settings(self):
+        global multiplayer
+        multiplayer = int(self.sender().text().split('(')[-1][:-1])
+        change_mode()
+
+
 class EndLine(pygame.sprite.Sprite):
     def __init__(self, y):
         super().__init__(endline_sprites)
@@ -218,7 +269,7 @@ class Slider(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(sliders_sprites)
         self.image = load_image('slider.png')
-        self.image = pygame.transform.scale(self.image, (114, 3))
+        self.image = pygame.transform.scale(self.image, (77, 3))
         self.rect = self.image.get_rect()
         self.rect.x = WIDTH // 5 * 2
         self.left_motion = False
@@ -236,8 +287,8 @@ class Slider(pygame.sprite.Sprite):
         if self.bot:
             self.rect = self.rect.move(ball.rect.x - self.rect.x + self.errors, 0)
             self.count_errors += 1
-            if self.rect.x >= WIDTH - 170:
-                self.rect.x = WIDTH - 170
+            if self.rect.x >= WIDTH - 134:
+                self.rect.x = WIDTH - 134
             if self.rect.x < 56:
                 self.rect.x = 56
             if self.count_errors == 300:
@@ -249,11 +300,14 @@ class Slider(pygame.sprite.Sprite):
                     self.rect = self.rect.move(-SLIDER_SPEED, 0)
 
             if self.right_motion:
-                if self.rect.x < WIDTH - 170:
+                if self.rect.x < WIDTH - 134:
                     self.rect = self.rect.move(SLIDER_SPEED, 0)
 
     def set_bot(self):
         self.bot = True
+
+    def set_player(self):
+        self.bot = False
 
     def set_y(self, y):
         self.rect.y = y
@@ -262,8 +316,6 @@ class Slider(pygame.sprite.Sprite):
         self.errors = 0
         self.count_errors = 0
         self.bot_level = level
-
-
 
 
 class Wall(pygame.sprite.Sprite):
@@ -407,6 +459,7 @@ class AnimatedSprite(pygame.sprite.Sprite):
             self.image = self.frames[self.cur_frame]
             self.image = pygame.transform.scale(self.image, (45, 250))
 
+
 dragon_1 = AnimatedSprite(load_image("support_colors.png", 1), 32, 2, 2, 70)
 dragon_2 = AnimatedSprite(load_image("support_colors.png", 1), 32, 2, WIDTH - 47, 70)
 
@@ -416,23 +469,29 @@ slide_2 = Slider()
 slide_1.set_y(50)
 slide_2.set_y(HEIGHT - 50)
 
-
 set_walls()
 endline = EndLine(0)
 endline.set_score_coords(WIDTH - 30, RIGHT_WALL_X)
 endline_2 = EndLine(HEIGHT - 10)
 multiplayer = start_screen()
 settings_button = SettingsButton(ball, slide_1, slide_2)
+level_button = LevelButton()
 antiwall_1 = Antibugs_wall(30)
 antiwall_2 = Antibugs_wall(WIDTH - 30)
-if multiplayer == 2:
-    slide_1.set_bot()
-elif multiplayer == 3:
-    slide_1.set_bot()
-    slide_2.set_bot()
 
 
+def change_mode():
+    if multiplayer == 2:
+        slide_1.set_bot()
+        slide_2.set_player()
+    elif multiplayer == 3:
+        slide_1.set_bot()
+        slide_2.set_bot()
+    else:
+        slide_1.set_player()
+        slide_2.set_player()
 
+change_mode()
 while running:
     screen.fill(pygame.Color("black"))
 
@@ -444,6 +503,7 @@ while running:
             running = False
         if event.type == pygame.MOUSEBUTTONDOWN:
             settings_button.check_click(event.pos)
+            level_button.check_click(event.pos)
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 if not ball.get_status():
