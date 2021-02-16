@@ -13,6 +13,16 @@ FPS = 60
 LEFT_WALL_x = 50
 RIGHT_WALL_X = WIDTH - 50
 SLIDER_SPEED = 12
+NAME_OF_MUSIC = "intro.mp3"
+MUSIC_VOLUME = 0.05
+START_SCREEN_PICT = 'fon.jpg'
+SETTINGS_BUT_PICT = "settings_button.png"
+LEVEL_BUT_PICT = 'levelbutton.png'
+ENDLINE_PICT = 'endline.png'
+SLIDER_PICT = 'slider.png'
+BALL_PICT = "ball.png"
+ANTIBUGS_WALLS_PICT = 'antibugs_wall.png'
+ANIMATED_PICT = "support_colors.png"
 
 dragons_sprites = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
@@ -32,6 +42,7 @@ running = True
 clock = pygame.time.Clock()
 
 
+# загрузка изображения
 def load_image(name, colorkey=None):
     fullname = os.path.join('data', name)
     if not os.path.isfile(fullname):
@@ -53,6 +64,7 @@ def terminate():
     sys.exit()
 
 
+# начальный экран
 def start_screen():
     intro_text = ["Выберите режим игры", "1 - мультиплеер", " 0 - одиночная игра",
                   " 2 - игра c ботом",
@@ -60,7 +72,7 @@ def start_screen():
                   "Платформы управляются с a и d ", "или стрелочками", "вправо и влево",
                   "При нажатии на шестеренку откроются настройки"]
 
-    fon = pygame.transform.scale(load_image('fon.jpg'), screen_size)
+    fon = pygame.transform.scale(load_image(START_SCREEN_PICT), screen_size)
     screen.blit(fon, (0, 0))
     font = pygame.font.Font(None, 30)
     text_coord = 50
@@ -73,8 +85,8 @@ def start_screen():
         text_coord += intro_rect.height
         screen.blit(string_rendered, intro_rect)
     pygame.mixer.init()
-    pygame.mixer.music.load("intro.mp3")
-    pygame.mixer.music.set_volume(0.00)
+    pygame.mixer.music.load(NAME_OF_MUSIC)
+    pygame.mixer.music.set_volume(MUSIC_VOLUME)
     pygame.mixer.music.play(-1)
 
     while True:
@@ -89,11 +101,12 @@ def start_screen():
         clock.tick(FPS)
 
 
+# класс кнопки для активации настройки
 class SettingsButton(pygame.sprite.Sprite):
 
     def __init__(self, ball, slider_1, slider_2):
         super().__init__(settings_sprites)
-        self.image = load_image('settings_button.png', -1)
+        self.image = load_image(SETTINGS_BUT_PICT, -1)
         self.image = pygame.transform.scale(self.image, (50, 50))
         self.rect = self.image.get_rect()
         self.rect.x = WIDTH - 50
@@ -125,6 +138,7 @@ class SettingsButton(pygame.sprite.Sprite):
             self.start_settings()
 
 
+#  класс настроек
 class SettingsMenu(QMainWindow, Ui_SettingsWindow):
 
     def __init__(self, ball, slider_1, slider_2):
@@ -148,6 +162,7 @@ class SettingsMenu(QMainWindow, Ui_SettingsWindow):
         self.apply_button.clicked.connect(self.apply_settings)
         self.min_speed_value.valueChanged.connect(self.min_speed_func)
 
+    # применить настройки
     def apply_settings(self):
         min_speed = self.min_speed_value.value()
         max_speed = self.max_speed_value.value()
@@ -170,11 +185,12 @@ class SettingsMenu(QMainWindow, Ui_SettingsWindow):
             self.max_speed_value.setValue(minimum_speed + 2)
 
 
+# класс для кнопки с выбором режимов
 class LevelButton(pygame.sprite.Sprite):
 
     def __init__(self):
         super().__init__(settings_sprites)
-        self.image = load_image('levelbutton.png', -1)
+        self.image = load_image(LEVEL_BUT_PICT, -1)
         self.image = pygame.transform.scale(self.image, (50, 50))
         self.rect = self.image.get_rect()
         self.rect.x = WIDTH - 50
@@ -203,6 +219,7 @@ class LevelButton(pygame.sprite.Sprite):
             self.start_level()
 
 
+# меню с выбором режим игры
 class LevelsMenu(QMainWindow, Ui_LevelSettings):
 
     def __init__(self):
@@ -223,10 +240,11 @@ class LevelsMenu(QMainWindow, Ui_LevelSettings):
         change_mode()
 
 
+# класс линии, которая считывает голы
 class EndLine(pygame.sprite.Sprite):
     def __init__(self, y):
         super().__init__(endline_sprites)
-        self.image = load_image('endline.png')
+        self.image = load_image(ENDLINE_PICT)
         self.rect = self.image.get_rect()
         self.rect.x = 0
         self.rect.y = y
@@ -264,11 +282,12 @@ class EndLine(pygame.sprite.Sprite):
                                                    text_w + 20, text_h + 20), 2)
 
 
+# класс платформы
 class Slider(pygame.sprite.Sprite):
 
     def __init__(self):
         super().__init__(sliders_sprites)
-        self.image = load_image('slider.png')
+        self.image = load_image(SLIDER_PICT)
         self.image = pygame.transform.scale(self.image, (77, 3))
         self.rect = self.image.get_rect()
         self.rect.x = WIDTH // 5 * 2
@@ -318,6 +337,7 @@ class Slider(pygame.sprite.Sprite):
         self.bot_level = level
 
 
+# класс боковых стенок
 class Wall(pygame.sprite.Sprite):
     list_of_coords = []
 
@@ -336,11 +356,12 @@ class Wall(pygame.sprite.Sprite):
             Wall.list_of_coords.append([(x1, y1), (x2, y2)])
 
 
+# класс мячика
 class Ball(pygame.sprite.Sprite):
 
     def __init__(self, *group):
         super().__init__(*group)
-        self.image = load_image("ball.png", -1)
+        self.image = load_image(BALL_PICT, -1)
         self.list_of_vectors = [-1, 1]
         self.vector_speed_x = 0
         self.vector_speed_y = 0
@@ -417,21 +438,24 @@ class Ball(pygame.sprite.Sprite):
             self.restart()
 
 
+# стенки помогающие в непридвиденных ситуациях
 class Antibugs_wall(pygame.sprite.Sprite):
 
     def __init__(self, x):
         super().__init__(horizontal_borders)
-        self.image = load_image('antibugs_wall.png')
+        self.image = load_image(ANTIBUGS_WALLS_PICT)
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.mask = pygame.mask.from_surface(self.image)
 
 
+# разместить стенки
 def set_walls():
     Wall(LEFT_WALL_x, 20, LEFT_WALL_x, HEIGHT - 20)
     Wall(RIGHT_WALL_X, 20, RIGHT_WALL_X, HEIGHT - 20)
 
 
+# анимированный спрайт (переливающаяся стенка)
 class AnimatedSprite(pygame.sprite.Sprite):
     def __init__(self, sheet, columns, rows, x, y):
         super().__init__(dragons_sprites)
@@ -460,8 +484,8 @@ class AnimatedSprite(pygame.sprite.Sprite):
             self.image = pygame.transform.scale(self.image, (45, 250))
 
 
-dragon_1 = AnimatedSprite(load_image("support_colors.png", 1), 32, 2, 2, 70)
-dragon_2 = AnimatedSprite(load_image("support_colors.png", 1), 32, 2, WIDTH - 47, 70)
+dragon_1 = AnimatedSprite(load_image(ANIMATED_PICT, 1), 32, 2, 2, 70)
+dragon_2 = AnimatedSprite(load_image(ANIMATED_PICT, 1), 32, 2, WIDTH - 47, 70)
 
 ball = Ball(ball_sprites)
 slide_1 = Slider()
@@ -490,6 +514,9 @@ def change_mode():
     else:
         slide_1.set_player()
         slide_2.set_player()
+    endline_2.score = 0
+    endline.score = 0
+
 
 change_mode()
 while running:
